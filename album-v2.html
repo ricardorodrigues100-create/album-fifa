@@ -80,6 +80,7 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 .cromo-btn.col.on{background:#15803d;color:#fff}
 .cromo-btn.rep.on{background:#1d4ed8;color:#fff}
 .cromo-rep-num{font-size:7px;color:#60a5fa;text-align:center;line-height:1;padding-bottom:1px}
+.cromo-traders{font-size:6.5px;color:#f5c842;text-align:center;padding:1px 2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46px}
 .user-card{background:#0f1635;border:1px solid #1e2d5a;border-radius:10px;padding:12px;margin-bottom:8px}
 .user-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .user-card-name{font-size:14px;font-weight:700;color:#f5c842}
@@ -350,8 +351,25 @@ async function loadUserData() {
     var pr = await sb.from('cromos_repetidos').select('codigo,quantidade').eq('user_id', uid);
     if (pr.data) { for (var i = 0; i < pr.data.length; i++) repetidos[pr.data[i].codigo] = pr.data[i].quantidade; }
   } catch(e) { console.log('loadUserData error:', e); }
+  // Load community data in background so traders show in Em Falta mode
+  loadComunidadeBackground();
   updateHeader();
   renderAlbum();
+}
+
+async function loadComunidadeBackground() {
+  try {
+    var pp = await sb.from('profiles').select('id,username');
+    if (pp.data) allProfiles = pp.data.filter(function(p) { return p.id !== currentUser.id; });
+    var pc = await sb.from('cromos_colados').select('user_id,codigo');
+    allColados = {};
+    if (pc.data) { for (var i = 0; i < pc.data.length; i++) { var r = pc.data[i]; if (!allColados[r.user_id]) allColados[r.user_id] = {}; allColados[r.user_id][r.codigo] = true; } }
+    var pr = await sb.from('cromos_repetidos').select('user_id,codigo,quantidade');
+    allRepetidos = {};
+    if (pr.data) { for (var i = 0; i < pr.data.length; i++) { var r = pr.data[i]; if (!allRepetidos[r.user_id]) allRepetidos[r.user_id] = {}; allRepetidos[r.user_id][r.codigo] = r.quantidade; } }
+    // Re-render if in falta mode to show traders
+    if (fmode === 1) renderAlbum();
+  } catch(e) { console.log('comunidade background error:', e); }
 }
 
 async function toggleColado(code) {
@@ -461,9 +479,23 @@ function renderAlbum() {
       var cells = '';
       for (var vi = 0; vi < vis.length; vi++) {
         var vc = vis[vi]; var rn = repetidos[vc] || 0;
+        // Find traders (community users with this sticker repeated) when in falta mode
+        var tradersHtml = '';
+        if (fmode === 1) {
+          var traders = [];
+          for (var pi = 0; pi < allProfiles.length; pi++) {
+            var prof = allProfiles[pi];
+            var theirRep = allRepetidos[prof.id] || {};
+            if (theirRep[vc] && theirRep[vc] > 0) traders.push(prof.username);
+          }
+          if (traders.length > 0) {
+            tradersHtml = '<div class="cromo-traders" title="' + traders.join(', ') + '">&#128101;' + traders.join(',') + '</div>';
+          }
+        }
         cells += '<div id="cr_' + vc + '" class="cromo" data-code="' + vc + '">'
           + '<div class="cromo-inner"><span class="cromo-code">' + vc + '</span>'
-          + '<span class="cromo-rep-num" id="repnum_' + vc + '">' + (rn > 0 ? 'x' + rn : '') + '</span></div>'
+          + '<span class="cromo-rep-num" id="repnum_' + vc + '">' + (rn > 0 ? 'x' + rn : '') + '</span>'
+          + tradersHtml + '</div>'
           + '<div class="cromo-actions">'
           + '<button id="col_' + vc + '" class="cromo-btn col' + (colados[vc] ? ' on' : '') + '" onclick="toggleColado(\'' + vc + '\')">Col</button>'
           + '<button id="rep_' + vc + '" class="cromo-btn rep' + (rn > 0 ? ' on' : '') + '" onclick="changeRep(\'' + vc + '\',1)">Rep+</button>'
