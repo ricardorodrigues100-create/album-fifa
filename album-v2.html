@@ -242,10 +242,9 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 <div class="toast" id="toast"></div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-// Check supabase loaded
-if (typeof supabase === 'undefined') { document.body.innerHTML = '<div style="color:red;padding:20px">Erro: supabase.js nao carregou.</div>'; return; }
 
+// Check supabase
+if(typeof supabase==='undefined'){alert('Erro: supabase.js nao carregou');}
 // Custom storage that never fails
 var memStorage = {};
 var safeStorage = {
@@ -763,7 +762,6 @@ async function doReset() {
   }
   btn.textContent = 'Guardar Password'; btn.disabled = false;
 }
-}); // DOMContentLoaded
 </script>
 </body>
 </html>
