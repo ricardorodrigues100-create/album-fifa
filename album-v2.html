@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a0f2e">
 <title>Album FIFA</title>
-<script src="./supabase.js" defer></script>
+<script src="./supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
@@ -243,8 +243,6 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 
 <script>
 
-// Check supabase
-if(typeof supabase==='undefined'){alert('Erro: supabase.js nao carregou');}
 // Custom storage that never fails
 var memStorage = {};
 var safeStorage = {
