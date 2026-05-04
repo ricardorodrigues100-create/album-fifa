@@ -241,8 +241,10 @@ async function doAuth() {
       var res = await sb.auth.signInWithPassword({ email: email, password: pass });
       if (res.error) { showAuthErr(res.error.message); }
       else if (res.data && res.data.user) {
-        currentUser = res.data.user;
-        await initApp();
+        var user = res.data.user;
+        var pp = await sb.from('profiles').select('username').eq('id', user.id).single();
+        var username = pp.data ? pp.data.username : user.email;
+        await initApp(user, username);
       }
     } else {
       var username = document.getElementById('inp-username').value.trim();
@@ -251,10 +253,9 @@ async function doAuth() {
       var res = await sb.auth.signUp({ email: email, password: pass });
       if (res.error) { showAuthErr(res.error.message); }
       else if (res.data && res.data.user) {
-        currentUser = res.data.user;
-        var ins = await sb.from('profiles').insert({ id: res.data.user.id, username: username });
-        if (ins.error && ins.error.code !== '23505') showAuthErr('Perfil: ' + ins.error.message);
-        else await initApp();
+        var user = res.data.user;
+        await sb.from('profiles').insert({ id: user.id, username: username });
+        await initApp(user, username);
       }
     }
   } catch(e) {
@@ -271,12 +272,14 @@ async function doLogout() {
 
 async function loadUserData() {
   var uid = currentUser.id;
-  var pc = await sb.from('cromos_colados').select('codigo').eq('user_id', uid);
   colados = {};
-  if (pc.data) { for (var i = 0; i < pc.data.length; i++) colados[pc.data[i].codigo] = true; }
-  var pr = await sb.from('cromos_repetidos').select('codigo,quantidade').eq('user_id', uid);
   repetidos = {};
-  if (pr.data) { for (var i = 0; i < pr.data.length; i++) repetidos[pr.data[i].codigo] = pr.data[i].quantidade; }
+  try {
+    var pc = await sb.from('cromos_colados').select('codigo').eq('user_id', uid);
+    if (pc.data) { for (var i = 0; i < pc.data.length; i++) colados[pc.data[i].codigo] = true; }
+    var pr = await sb.from('cromos_repetidos').select('codigo,quantidade').eq('user_id', uid);
+    if (pr.data) { for (var i = 0; i < pr.data.length; i++) repetidos[pr.data[i].codigo] = pr.data[i].quantidade; }
+  } catch(e) { console.log('loadUserData error:', e); }
   updateHeader();
   renderAlbum();
 }
@@ -502,25 +505,16 @@ function showToast(msg) {
   setTimeout(function() { t.className = 'toast'; }, 2000);
 }
 
-async function initApp() {
-  var pp = await sb.from('profiles').select('username').eq('id', currentUser.id).single();
-  var username = pp.data ? pp.data.username : currentUser.email;
-  document.getElementById('hdr-username').textContent = username;
+async function initApp(user, username) {
+  currentUser = user;
+  document.getElementById('hdr-username').textContent = username || user.email;
   document.getElementById('auth-wrap').style.display = 'none';
   document.getElementById('app').className = 'app show';
   await loadUserData();
 }
 
-sb.auth.onAuthStateChange(async function(event, session) {
-  if (session && session.user && !currentUser) {
-    currentUser = session.user;
-    await initApp();
-  } else if (!session) {
-    currentUser = null; colados = {}; repetidos = {};
-    document.getElementById('auth-wrap').style.display = 'flex';
-    document.getElementById('app').className = 'app';
-  }
-});
+// No onAuthStateChange - handled directly in doAuth
+
 </script>
 </body>
 </html>
