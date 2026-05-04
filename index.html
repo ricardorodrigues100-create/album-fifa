@@ -1,1 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f2e">
+<title>Album FIFA</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: #080d24; color: #e8eaf6; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; -webkit-overflow-scrolling: touch; }
+.header { position: -webkit-sticky; position: sticky; top: 0; z-index: 100; background: #0a0f2e; border-bottom: 1px solid #1e2d5a; padding: 12px 16px 10px; }
+.header-top { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; gap: 10px; }
+.logo-area { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 10px; min-width: 0; -webkit-flex: 1; flex: 1; }
+.trophy { font-size: 26px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.title-main { font-size: 17px; font-weight: 800; letter-spacing: 1.5px; color: #f5c842; text-transform: uppercase; line-height: 1.1; }
+.title-sub { font-size: 9px; color: #6b7db3; letter-spacing: 0.4px; margin-top: 2px; }
+.stats-pill { background: #162040; border: 1px solid #1e2d5a; border-radius: 20px; padding: 6px 14px; text-align: center; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.stats-num { font-size: 20px; font-weight: 800; color: #f5c842; line-height: 1; }
+.stats-lbl { font-size: 9px; color: #6b7db3; }
+.prog-wrap { margin-top: 8px; background: #1e2d5a; border-radius: 4px; height: 5px; overflow: hidden; }
+.prog-fill { height: 100%; background: #f5c842; border-radius: 4px; width: 0%; -webkit-transition: width 0.3s; transition: width 0.3s; }
+.filters { display: -webkit-flex; display: flex; gap: 6px; padding: 10px 16px 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.filters::-webkit-scrollbar { display: none; }
+.fbtn { -webkit-flex-shrink: 0; flex-shrink: 0; background: #0f1635; border: 1px solid #1e2d5a; color: #6b7db3; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; cursor: pointer; -webkit-appearance: none; }
+.fbtn.on { background: #f5c842; border-color: #f5c842; color: #0a0f2e; }
+.search-wrap { padding: 10px 16px 0; }
+.search-box { width: 100%; background: #0f1635; border: 1px solid #1e2d5a; border-radius: 10px; color: #e8eaf6; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; font-size: 14px; padding: 10px 14px; outline: none; -webkit-appearance: none; appearance: none; }
+.search-box::-webkit-input-placeholder { color: #6b7db3; }
+.content { padding: 12px 16px 100px; }
+.grupo-section { margin-bottom: 16px; }
+.grupo-hdr { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; padding: 8px 12px; border-radius: 10px 10px 0 0; }
+.grupo-nome { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #fff; text-transform: uppercase; }
+.grupo-badge { font-size: 10px; font-weight: 600; background: rgba(255,255,255,0.18); padding: 2px 8px; border-radius: 10px; color: rgba(255,255,255,0.9); }
+.team-block { background: #0f1635; border: 1px solid #1e2d5a; border-top: none; padding: 10px 10px 8px; }
+.team-block:last-child { border-radius: 0 0 10px 10px; }
+.team-hdr { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; margin-bottom: 8px; }
+.team-nome { font-size: 11px; font-weight: 700; color: #6b7db3; text-transform: uppercase; letter-spacing: 0.8px; }
+.team-prog { font-size: 10px; color: #6b7db3; }
+.team-prog b { color: #22c55e; }
+.grid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 5px; }
+.cromo { width: 44px; height: 44px; border-radius: 8px; border: 1.5px solid #1e2d5a; background: #162040; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; cursor: pointer; position: relative; -webkit-user-select: none; user-select: none; }
+.cromo-code { font-size: 8px; font-weight: 700; color: #6b7db3; letter-spacing: 0.2px; text-align: center; padding: 0 2px; line-height: 1.2; }
+.cromo.on { background: #052e16; border-color: #15803d; }
+.cromo.on .cromo-code { color: #22c55e; }
+.cromo.on::after { content: "v"; position: absolute; top: 2px; right: 4px; font-size: 8px; font-weight: 900; color: #22c55e; line-height: 1; }
+.bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #080d24; border-top: 1px solid #1e2d5a; padding: 10px 16px 20px; z-index: 100; }
+.bottom-btns { display: -webkit-flex; display: flex; gap: 8px; }
+.bbtn { -webkit-flex: 1; flex: 1; padding: 12px; border-radius: 10px; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; border: none; -webkit-appearance: none; }
+.bbtn-gold { background: #f5c842; color: #0a0f2e; }
+.bbtn-dark { background: #0f1635; border: 1px solid #1e2d5a; color: #6b7db3; }
+.empty { text-align: center; padding: 48px 24px; color: #6b7db3; font-size: 14px; }
+.toast { position: fixed; top: 80px; left: 50%; -webkit-transform: translateX(-50%); transform: translateX(-50%); background: #162040; border: 1px solid #e8a800; color: #f5c842; font-size: 12px; font-weight: 600; padding: 8px 18px; border-radius: 20px; opacity: 0; pointer-events: none; z-index: 999; white-space: nowrap; -webkit-transition: opacity 0.25s; transition: opacity 0.25s; }
+.toast.show { opacity: 1; }
+.gc0{background:#1a3a6b}.gc1{background:#6b1a1a}.gc2{background:#1a5c2a}.gc3{background:#6b4a1a}.gc4{background:#4a1a6b}.gc5{background:#1a5c5c}.gc6{background:#6b1a4a}.gc7{background:#1a4a6b}.gc8{background:#4a4a1a}.gc9{background:#6b3a1a}.gc10{background:#1a6b4a}.gc11{background:#5c1a6b}.gc12{background:#2a5c3a}
+</style>
+</head>
+<body>
 
+<div class="header">
+  <div class="header-top">
+    <div class="logo-area">
+      <div class="trophy">&#127942;</div>
+      <div>
+        <div class="title-main">FIFA WORLD CUP</div>
+        <div class="title-sub">ALBUM DE CROMOS INTERATIVO</div>
+      </div>
+    </div>
+    <div class="stats-pill">
+      <div class="stats-num" id="cnt">0</div>
+      <div class="stats-lbl">colados</div>
+    </div>
+  </div>
+  <div class="prog-wrap"><div class="prog-fill" id="prog"></div></div>
+</div>
+
+<div class="filters">
+  <button class="fbtn on" id="fb0" onclick="setF(0)">Todos</button>
+  <button class="fbtn" id="fb1" onclick="setF(1)">Em falta</button>
+  <button class="fbtn" id="fb2" onclick="setF(2)">Colados</button>
+</div>
+
+<div class="search-wrap">
+  <input class="search-box" id="sq" type="search" placeholder="Pesquisar cromo (ex: POR5, Brasil...)" oninput="render()">
+</div>
+
+<div class="content" id="ct"></div>
+
+<div class="bottom-bar">
+  <div class="bottom-btns">
+    <button class="bbtn bbtn-gold" onclick="doExport()">Exportar lista</button>
+    <button class="bbtn bbtn-dark" onclick="doReset()">Reiniciar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var DATA = [{"g":"","p":"FIFA","c":["FWC1","FWC2","FWC3","FWC4","FWC5","FWC6","FWC7","FWC8","FWC9","FWC10","FWC11","FWC12","FWC13","FWC14","FWC15","FWC16","FWC17","FWC18","FWC19"]},{"g":"Grupo A","p":"Mexico","c":["MEX1","MEX2","MEX3","MEX4","MEX5","MEX6","MEX7","MEX8","MEX9","MEX10","MEX11","MEX12","MEX13","MEX14","MEX15","MEX16","MEX17","MEX18","MEX19","MEX20"]},{"g":"Grupo A","p":"Africa Sul","c":["RSA1","RSA2","RSA3","RSA4","RSA5","RSA6","RSA7","RSA8","RSA9","RSA10","RSA11","RSA12","RSA13","RSA14","RSA15","RSA16","RSA17","RSA18","RSA19","RSA20"]},{"g":"Grupo A","p":"Coreia Sul","c":["KOR1","KOR2","KOR3","KOR4","KOR5","KOR6","KOR7","KOR8","KOR9","KOR10","KOR11","KOR12","KOR13","KOR14","KOR15","KOR16","KOR17","KOR18","KOR19","KOR20"]},{"g":"Grupo A","p":"Rep. Checa","c":["CZE1","CZE2","CZE3","CZE4","CZE5","CZE6","CZE7","CZE8","CZE9","CZE10","CZE11","CZE12","CZE13","CZE14","CZE15","CZE16","CZE17","CZE18","CZE19","CZE20"]},{"g":"Grupo B","p":"Canada","c":["CAN1","CAN2","CAN3","CAN4","CAN5","CAN6","CAN7","CAN8","CAN9","CAN10","CAN11","CAN12","CAN13","CAN14","CAN15","CAN16","CAN17","CAN18","CAN19","CAN20"]},{"g":"Grupo B","p":"Bosnia","c":["BIH1","BIH2","BIH3","BIH4","BIH5","BIH6","BIH7","BIH8","BIH9","BIH10","BIH11","BIH12","BIH13","BIH14","BIH15","BIH16","BIH17","BIH18","BIH19","BIH20"]},{"g":"Grupo B","p":"Qatar","c":["QAT1","QAT2","QAT3","QAT4","QAT5","QAT6","QAT7","QAT8","QAT9","QAT10","QAT11","QAT12","QAT13","QAT14","QAT15","QAT16","QAT17","QAT18","QAT19","QAT20"]},{"g":"Grupo B","p":"Suica","c":["SUI1","SUI2","SUI3","SUI4","SUI5","SUI6","SUI7","SUI8","SUI9","SUI10","SUI11","SUI12","SUI13","SUI14","SUI15","SUI16","SUI17","SUI18","SUI19","SUI20"]},{"g":"Grupo C","p":"Brasil","c":["BRA1","BRA2","BRA3","BRA4","BRA5","BRA6","BRA7","BRA8","BRA9","BRA10","BRA11","BRA12","BRA13","BRA14","BRA15","BRA16","BRA17","BRA18","BRA19","BRA20"]},{"g":"Grupo C","p":"Marrocos","c":["MAR1","MAR2","MAR3","MAR4","MAR5","MAR6","MAR7","MAR8","MAR9","MAR10","MAR11","MAR12","MAR13","MAR14","MAR15","MAR16","MAR17","MAR18","MAR19","MAR20"]},{"g":"Grupo C","p":"Haiti","c":["HAI1","HAI2","HAI3","HAI4","HAI5","HAI6","HAI7","HAI8","HAI9","HAI10","HAI11","HAI12","HAI13","HAI14","HAI15","HAI16","HAI17","HAI18","HAI19","HAI20"]},{"g":"Grupo C","p":"Escocia","c":["SCO1","SCO2","SCO3","SCO4","SCO5","SCO6","SCO7","SCO8","SCO9","SCO10","SCO11","SCO12","SCO13","SCO14","SCO15","SCO16","SCO17","SCO18","SCO19","SCO20"]},{"g":"Grupo D","p":"USA","c":["USA1","USA2","USA3","USA4","USA5","USA6","USA7","USA8","USA9","USA10","USA11","USA12","USA13","USA14","USA15","USA16","USA17","USA18","USA19","USA20"]},{"g":"Grupo D","p":"Paraguai","c":["PAR1","PAR2","PAR3","PAR4","PAR5","PAR6","PAR7","PAR8","PAR9","PAR10","PAR11","PAR12","PAR13","PAR14","PAR15","PAR16","PAR17","PAR18","PAR19","PAR20"]},{"g":"Grupo D","p":"Australia","c":["AUS1","AUS2","AUS3","AUS4","AUS5","AUS6","AUS7","AUS8","AUS9","AUS10","AUS11","AUS12","AUS13","AUS14","AUS15","AUS16","AUS17","AUS18","AUS19","AUS20"]},{"g":"Grupo D","p":"Turquia","c":["TUR1","TUR2","TUR3","TUR4","TUR5","TUR6","TUR7","TUR8","TUR9","TUR10","TUR11","TUR12","TUR13","TUR14","TUR15","TUR16","TUR17","TUR18","TUR19","TUR20"]},{"g":"Grupo E","p":"Alemanha","c":["GER1","GER2","GER3","GER4","GER5","GER6","GER7","GER8","GER9","GER10","GER11","GER12","GER13","GER14","GER15","GER16","GER17","GER18","GER19","GER20"]},{"g":"Grupo E","p":"Curacao","c":["CUW1","CUW2","CUW3","CUW4","CUW5","CUW6","CUW7","CUW8","CUW9","CUW10","CUW11","CUW12","CUW13","CUW14","CUW15","CUW16","CUW17","CUW18","CUW19","CUW20"]},{"g":"Grupo E","p":"C. Marfim","c":["CIV1","CIV2","CIV3","CIV4","CIV5","CIV6","CIV7","CIV8","CIV9","CIV10","CIV11","CIV12","CIV13","CIV14","CIV15","CIV16","CIV17","CIV18","CIV19","CIV20"]},{"g":"Grupo E","p":"Equador","c":["ECU1","ECU2","ECU3","ECU4","ECU5","ECU6","ECU7","ECU8","ECU9","ECU10","ECU11","ECU12","ECU13","ECU14","ECU15","ECU16","ECU17","ECU18","ECU19","ECU20"]},{"g":"Grupo F","p":"Holanda","c":["NED1","NED2","NED3","NED4","NED5","NED6","NED7","NED8","NED9","NED10","NED11","NED12","NED13","NED14","NED15","NED16","NED17","NED18","NED19","NED20"]},{"g":"Grupo F","p":"Japao","c":["JPN1","JPN2","JPN3","JPN4","JPN5","JPN6","JPN7","JPN8","JPN9","JPN10","JPN11","JPN12","JPN13","JPN14","JPN15","JPN16","JPN17","JPN18","JPN19","JPN20"]},{"g":"Grupo F","p":"Suecia","c":["SWE1","SWE2","SWE3","SWE4","SWE5","SWE6","SWE7","SWE8","SWE9","SWE10","SWE11","SWE12","SWE13","SWE14","SWE15","SWE16","SWE17","SWE18","SWE19","SWE20"]},{"g":"Grupo F","p":"Tunisia","c":["TUN1","TUN2","TUN3","TUN4","TUN5","TUN6","TUN7","TUN8","TUN9","TUN10","TUN11","TUN12","TUN13","TUN14","TUN15","TUN16","TUN17","TUN18","TUN19","TUN20"]},{"g":"Grupo G","p":"Belgica","c":["BEL1","BEL2","BEL3","BEL4","BEL5","BEL6","BEL7","BEL8","BEL9","BEL10","BEL11","BEL12","BEL13","BEL14","BEL15","BEL16","BEL17","BEL18","BEL19","BEL20"]},{"g":"Grupo G","p":"Egipto","c":["EGY1","EGY2","EGY3","EGY4","EGY5","EGY6","EGY7","EGY8","EGY9","EGY10","EGY11","EGY12","EGY13","EGY14","EGY15","EGY16","EGY17","EGY18","EGY19","EGY20"]},{"g":"Grupo G","p":"Irao","c":["IRN1","IRN2","IRN3","IRN4","IRN5","IRN6","IRN7","IRN8","IRN9","IRN10","IRN11","IRN12","IRN13","IRN14","IRN15","IRN16","IRN17","IRN18","IRN19","IRN20"]},{"g":"Grupo G","p":"N. Zelandia","c":["NZL1","NZL2","NZL3","NZL4","NZL5","NZL6","NZL7","NZL8","NZL9","NZL10","NZL11","NZL12","NZL13","NZL14","NZL15","NZL16","NZL17","NZL18","NZL19","NZL20"]},{"g":"Grupo H","p":"Espanha","c":["ESP1","ESP2","ESP3","ESP4","ESP5","ESP6","ESP7","ESP8","ESP9","ESP10","ESP11","ESP12","ESP13","ESP14","ESP15","ESP16","ESP17","ESP18","ESP19","ESP20"]},{"g":"Grupo H","p":"Cabo Verde","c":["CPV1","CPV2","CPV3","CPV4","CPV5","CPV6","CPV7","CPV8","CPV9","CPV10","CPV11","CPV12","CPV13","CPV14","CPV15","CPV16","CPV17","CPV18","CPV19","CPV20"]},{"g":"Grupo H","p":"Arabia Saudita","c":["KSA1","KSA2","KSA3","KSA4","KSA5","KSA6","KSA7","KSA8","KSA9","KSA10","KSA11","KSA12","KSA13","KSA14","KSA15","KSA16","KSA17","KSA18","KSA19","KSA20"]},{"g":"Grupo H","p":"Uruguai","c":["URU1","URU2","URU3","URU4","URU5","URU6","URU7","URU8","URU9","URU10","URU11","URU12","URU13","URU14","URU15","URU16","URU17","URU18","URU19","URU20"]},{"g":"Grupo I","p":"Franca","c":["FRA1","FRA2","FRA3","FRA4","FRA5","FRA6","FRA7","FRA8","FRA9","FRA10","FRA11","FRA12","FRA13","FRA14","FRA15","FRA16","FRA17","FRA18","FRA19","FRA20"]},{"g":"Grupo I","p":"Senegal","c":["SEN1","SEN2","SEN3","SEN4","SEN5","SEN6","SEN7","SEN8","SEN9","SEN10","SEN11","SEN12","SEN13","SEN14","SEN15","SEN16","SEN17","SEN18","SEN19","SEN20"]},{"g":"Grupo I","p":"Iraque","c":["IRQ1","IRQ2","IRQ3","IRQ4","IRQ5","IRQ6","IRQ7","IRQ8","IRQ9","IRQ10","IRQ11","IRQ12","IRQ13","IRQ14","IRQ15","IRQ16","IRQ17","IRQ18","IRQ19","IRQ20"]},{"g":"Grupo I","p":"Noruega","c":["NOR1","NOR2","NOR3","NOR4","NOR5","NOR6","NOR7","NOR8","NOR9","NOR10","NOR11","NOR12","NOR13","NOR14","NOR15","NOR16","NOR17","NOR18","NOR19","NOR20"]},{"g":"Grupo J","p":"Argentina","c":["ARG1","ARG2","ARG3","ARG4","ARG5","ARG6","ARG7","ARG8","ARG9","ARG10","ARG11","ARG12","ARG13","ARG14","ARG15","ARG16","ARG17","ARG18","ARG19","ARG20"]},{"g":"Grupo J","p":"Argelia","c":["ALG1","ALG2","ALG3","ALG4","ALG5","ALG6","ALG7","ALG8","ALG9","ALG10","ALG11","ALG12","ALG13","ALG14","ALG15","ALG16","ALG17","ALG18","ALG19","ALG20"]},{"g":"Grupo J","p":"Austria","c":["AUT1","AUT2","AUT3","AUT4","AUT5","AUT6","AUT7","AUT8","AUT9","AUT10","AUT11","AUT12","AUT13","AUT14","AUT15","AUT16","AUT17","AUT18","AUT19","AUT20"]},{"g":"Grupo J","p":"Jordania","c":["JOR1","JOR2","JOR3","JOR4","JOR5","JOR6","JOR7","JOR8","JOR9","JOR10","JOR11","JOR12","JOR13","JOR14","JOR15","JOR16","JOR17","JOR18","JOR19","JOR20"]},{"g":"Grupo K","p":"Portugal","c":["POR1","POR2","POR3","POR4","POR5","POR6","POR7","POR8","POR9","POR10","POR11","POR12","POR13","POR14","POR15","POR16","POR17","POR18","POR19","POR20"]},{"g":"Grupo K","p":"Rep. Congo","c":["COD1","COD2","COD3","COD4","COD5","COD6","COD7","COD8","COD9","COD10","COD11","COD12","COD13","COD14","COD15","COD16","COD17","COD18","COD19","COD20"]},{"g":"Grupo K","p":"Uzbequistao","c":["UZB1","UZB2","UZB3","UZB4","UZB5","UZB6","UZB7","UZB8","UZB9","UZB10","UZB11","UZB12","UZB13","UZB14","UZB15","UZB16","UZB17","UZB18","UZB19","UZB20"]},{"g":"Grupo K","p":"Colombia","c":["COL1","COL2","COL3","COL4","COL5","COL6","COL7","COL8","COL9","COL10","COL11","COL12","COL13","COL14","COL15","COL16","COL17","COL18","COL19","COL20"]},{"g":"Grupo L","p":"Inglaterra","c":["ENG1","ENG2","ENG3","ENG4","ENG5","ENG6","ENG7","ENG8","ENG9","ENG10","ENG11","ENG12","ENG13","ENG14","ENG15","ENG16","ENG17","ENG18","ENG19","ENG20"]},{"g":"Grupo L","p":"Croacia","c":["CRO1","CRO2","CRO3","CRO4","CRO5","CRO6","CRO7","CRO8","CRO9","CRO10","CRO11","CRO12","CRO13","CRO14","CRO15","CRO16","CRO17","CRO18","CRO19","CRO20"]},{"g":"Grupo L","p":"Gana","c":["GHA1","GHA2","GHA3","GHA4","GHA5","GHA6","GHA7","GHA8","GHA9","GHA10","GHA11","GHA12","GHA13","GHA14","GHA15","GHA16","GHA17","GHA18","GHA19","GHA20"]},{"g":"Grupo L","p":"Panama","c":["PAN1","PAN2","PAN3","PAN4","PAN5","PAN6","PAN7","PAN8","PAN9","PAN10","PAN11","PAN12","PAN13","PAN14","PAN15","PAN16","PAN17","PAN18","PAN19","PAN20"]}];
+
+var TOTAL = 0;
+for (var i = 0; i < DATA.length; i++) TOTAL += DATA[i].c.length;
+
+var SK = 'fifa_v2';
+var colados = {};
+try { var s = localStorage.getItem(SK); if (s) colados = JSON.parse(s); } catch(e) {}
+
+var filterMode = 0;
+
+function save() { try { localStorage.setItem(SK, JSON.stringify(colados)); } catch(e) {} }
+
+function countColados() {
+  var n = 0;
+  for (var k in colados) { if (colados[k]) n++; }
+  return n;
+}
+
+function updateHeader() {
+  var n = countColados();
+  document.getElementById('cnt').innerHTML = n;
+  document.getElementById('prog').style.width = Math.round(n / TOTAL * 100) + '%';
+}
+
+function setF(mode) {
+  filterMode = mode;
+  for (var i = 0; i < 3; i++) {
+    var b = document.getElementById('fb' + i);
+    if (b) b.className = (i === mode) ? 'fbtn on' : 'fbtn';
+  }
+  render();
+}
+
+function toggle(code) {
+  colados[code] = !colados[code];
+  save();
+  updateHeader();
+  var el = document.getElementById('cr_' + code);
+  if (!el) return;
+  el.className = colados[code] ? 'cromo on' : 'cromo';
+  var grid = el.parentNode;
+  var block = grid ? grid.parentNode : null;
+  if (block) {
+    var hdr = block.querySelector('.team-prog');
+    if (hdr) {
+      var all = block.querySelectorAll('.cromo');
+      var done = block.querySelectorAll('.cromo.on');
+      hdr.innerHTML = '<b>' + done.length + '</b>/' + all.length;
+    }
+  }
+  if (filterMode === 1 && colados[code]) el.style.display = 'none';
+  if (filterMode === 2 && !colados[code]) el.style.display = 'none';
+}
+
+function render() {
+  var q = '';
+  var sqEl = document.getElementById('sq');
+  if (sqEl) q = (sqEl.value || '').toLowerCase();
+
+  var ct = document.getElementById('ct');
+  ct.innerHTML = '';
+
+  var grupoOrder = [];
+  var grupoMap = {};
+  for (var i = 0; i < DATA.length; i++) {
+    var sec = DATA[i];
+    var gname = sec.g || 'FIFA';
+    if (!grupoMap[gname]) { grupoMap[gname] = []; grupoOrder.push(gname); }
+    grupoMap[gname].push(sec);
+  }
+
+  var anyVisible = false;
+
+  for (var gi = 0; gi < grupoOrder.length; gi++) {
+    var gname = grupoOrder[gi];
+    var secs = grupoMap[gname];
+    var groupHtml = '';
+    var groupTotal = 0;
+    var groupDone = 0;
+
+    for (var si = 0; si < secs.length; si++) {
+      var sec = secs[si];
+      var visibleCromos = [];
+      var teamDone = 0;
+
+      for (var ci = 0; ci < sec.c.length; ci++) {
+        var code = sec.c[ci];
+        var isOn = !!colados[code];
+        if (isOn) teamDone++;
+        groupTotal++;
+        if (isOn) groupDone++;
+        var matchQ = !q || code.toLowerCase().indexOf(q) !== -1 || sec.p.toLowerCase().indexOf(q) !== -1;
+        var matchF = filterMode === 0 || (filterMode === 1 && !isOn) || (filterMode === 2 && isOn);
+        if (matchQ && matchF) visibleCromos.push(code);
+      }
+
+      if (visibleCromos.length === 0) continue;
+      anyVisible = true;
+
+      var cellsHtml = '';
+      for (var vi = 0; vi < visibleCromos.length; vi++) {
+        var vc = visibleCromos[vi];
+        cellsHtml += '<div id="cr_' + vc + '" class="cromo' + (colados[vc] ? ' on' : '') + '" onclick="toggle(\'' + vc + '\')">'
+          + '<span class="cromo-code">' + vc + '</span>'
+          + '</div>';
+      }
+
+      groupHtml += '<div class="team-block">'
+        + '<div class="team-hdr">'
+        + '<span class="team-nome">' + sec.p + '</span>'
+        + '<span class="team-prog"><b>' + teamDone + '</b>/' + sec.c.length + '</span>'
+        + '</div>'
+        + '<div class="grid">' + cellsHtml + '</div>'
+        + '</div>';
+    }
+
+    if (!groupHtml) continue;
+
+    var section = document.createElement('div');
+    section.className = 'grupo-section';
+    section.innerHTML = '<div class="grupo-hdr gc' + (gi % 13) + '">'
+      + '<span class="grupo-nome">' + gname + '</span>'
+      + '<span class="grupo-badge">' + groupDone + '/' + groupTotal + '</span>'
+      + '</div>'
+      + groupHtml;
+    ct.appendChild(section);
+  }
+
+  if (!anyVisible) {
+    ct.innerHTML = '<div class="empty">Nenhum cromo encontrado</div>';
+  }
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.className = 'toast show';
+  setTimeout(function() { t.className = 'toast'; }, 2500);
+}
+
+function doExport() {
+  var missing = [], have = [];
+  for (var i = 0; i < DATA.length; i++) {
+    for (var ci = 0; ci < DATA[i].c.length; ci++) {
+      var code = DATA[i].c[ci];
+      if (colados[code]) have.push(code); else missing.push(code);
+    }
+  }
+  var n = countColados();
+  var text = 'ALBUM FIFA\nColados: ' + n + '/' + TOTAL + '\nEm falta: ' + (TOTAL - n)
+    + '\n\nEM FALTA:\n' + missing.join(', ')
+    + '\n\nCOLADOS:\n' + have.join(', ');
+  try {
+    navigator.clipboard.writeText(text).then(function() { showToast('Copiado!'); });
+  } catch(e) {
+    showToast('Use partilhar do browser');
+  }
+}
+
+function doReset() {
+  var n = countColados();
+  if (n === 0) { showToast('Nenhum cromo marcado'); return; }
+  if (confirm('Apagar os ' + n + ' cromos marcados?')) {
+    colados = {};
+    save();
+    updateHeader();
+    render();
+    showToast('Album reiniciado');
+  }
+}
+
+updateHeader();
+render();
+</script>
+</body>
+</html>
