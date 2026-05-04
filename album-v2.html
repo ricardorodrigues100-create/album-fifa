@@ -223,24 +223,32 @@ async function doAuth() {
   var email = document.getElementById('inp-email').value.trim();
   var pass = document.getElementById('inp-pass').value;
   var btn = document.getElementById('auth-submit');
+  var label = authMode === 'login' ? 'Entrar' : 'Registar';
   btn.textContent = '...';
   btn.disabled = true;
   document.getElementById('auth-err').className = 'auth-err';
 
-  if (authMode === 'login') {
-    var res = await sb.auth.signInWithPassword({ email: email, password: pass });
-    if (res.error) { showAuthErr(res.error.message); btn.textContent = 'Entrar'; btn.disabled = false; }
-  } else {
-    var username = document.getElementById('inp-username').value.trim();
-    if (!username) { showAuthErr('Introduz um username'); btn.textContent = 'Registar'; btn.disabled = false; return; }
-    var res = await sb.auth.signUp({ email: email, password: pass });
-    if (res.error) { showAuthErr(res.error.message); btn.textContent = 'Registar'; btn.disabled = false; return; }
-    if (res.data && res.data.user) {
-      await sb.from('profiles').insert({ id: res.data.user.id, username: username });
+  try {
+    if (authMode === 'login') {
+      var res = await sb.auth.signInWithPassword({ email: email, password: pass });
+      if (res.error) showAuthErr(res.error.message);
+    } else {
+      var username = document.getElementById('inp-username').value.trim();
+      if (!username) { showAuthErr('Introduz um username'); btn.textContent = label; btn.disabled = false; return; }
+      if (pass.length < 6) { showAuthErr('Password deve ter pelo menos 6 caracteres'); btn.textContent = label; btn.disabled = false; return; }
+      var res = await sb.auth.signUp({ email: email, password: pass });
+      if (res.error) { showAuthErr(res.error.message); }
+      else if (res.data && res.data.user) {
+        var ins = await sb.from('profiles').insert({ id: res.data.user.id, username: username });
+        if (ins.error) showAuthErr('Perfil: ' + ins.error.message);
+      }
     }
-    btn.textContent = 'Registar';
-    btn.disabled = false;
+  } catch(e) {
+    showAuthErr('Erro: ' + e.message);
   }
+
+  btn.textContent = label;
+  btn.disabled = false;
 }
 
 async function doLogout() {
