@@ -184,14 +184,22 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 <div class="toast" id="toast"></div>
 
 <script>
+// Custom storage that never fails
+var memStorage = {};
+var safeStorage = {
+  getItem: function(k) { try { return localStorage.getItem(k); } catch(e) { return memStorage[k] || null; } },
+  setItem: function(k, v) { try { localStorage.setItem(k, v); } catch(e) { memStorage[k] = v; } },
+  removeItem: function(k) { try { localStorage.removeItem(k); } catch(e) { delete memStorage[k]; } }
+};
+
 var sb = supabase.createClient(
   'https://pqjdqievlwxsegkeqcso.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxamRxaWV2bHd4c2Vna2VxY3NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTUwMzMsImV4cCI6MjA5MzQ5MTAzM30.JPRwaAWrNjdTewf61DMITQFhKeGf9e6ioVyXBiPUmR8',
   {
     auth: {
-      storage: window.localStorage,
-      autoRefreshToken: true,
-      persistSession: true,
+      storage: safeStorage,
+      autoRefreshToken: false,
+      persistSession: false,
       detectSessionInUrl: false
     }
   }
