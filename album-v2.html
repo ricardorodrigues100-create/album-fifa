@@ -278,7 +278,14 @@ async function doAuth() {
 }
 
 async function doLogout() {
-  await sb.auth.signOut();
+  try { await sb.auth.signOut(); } catch(e) {}
+  currentUser = null;
+  colados = {};
+  repetidos = {};
+  document.getElementById('auth-wrap').style.display = 'flex';
+  document.getElementById('app').className = 'app';
+  document.getElementById('inp-email').value = '';
+  document.getElementById('inp-pass').value = '';
 }
 
 async function loadUserData() {
