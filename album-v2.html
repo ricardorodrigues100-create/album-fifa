@@ -702,6 +702,8 @@ async function initApp(user, username) {
   document.getElementById('auth-wrap').style.display = 'none';
   document.getElementById('app').className = 'app show';
   await loadUserData();
+  // Pre-load chat so it's ready when user opens Comunidade tab
+  loadChat();
 }
 
 // No onAuthStateChange - handled directly in doAuth
