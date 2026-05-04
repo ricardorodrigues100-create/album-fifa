@@ -277,8 +277,7 @@ async function doAuth() {
   btn.disabled = false;
 }
 
-async function doLogout() {
-  try { await sb.auth.signOut(); } catch(e) {}
+function doLogout() {
   currentUser = null;
   colados = {};
   repetidos = {};
@@ -286,6 +285,7 @@ async function doLogout() {
   document.getElementById('app').className = 'app';
   document.getElementById('inp-email').value = '';
   document.getElementById('inp-pass').value = '';
+  try { sb.auth.signOut(); } catch(e) {}
 }
 
 async function loadUserData() {
