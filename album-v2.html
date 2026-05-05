@@ -680,11 +680,25 @@ function renderComunidade() {
     if (theyGive.length) { giveHtml += '<div class="match-section"><div class="match-title">Eles tem para te dar (' + theyGive.length + ')</div><div class="match-codes">'; for (var i = 0; i < theyGive.length; i++) giveHtml += '<span class="match-code need">' + theyGive[i] + '</span>'; giveHtml += '</div></div>'; }
     var getHtml = '';
     if (iGive.length) { getHtml += '<div class="match-section"><div class="match-title">Tu tens para lhes dar (' + iGive.length + ')</div><div class="match-codes">'; for (var i = 0; i < iGive.length; i++) getHtml += '<span class="match-code have">' + iGive[i] + '</span>'; getHtml += '</div></div>'; }
-    if (!giveHtml && !getHtml) giveHtml = '<div class="no-match">Sem trocas possiveis de momento</div>';
+    // Show ALL their repeated stickers
+    var allRepHtml = '';
+    var allRepCodes = [];
+    for (var code in theirRep) { if (theirRep[code] > 0) allRepCodes.push(code); }
+    if (allRepCodes.length) {
+      allRepHtml += '<div class="match-section"><div class="match-title">Todos os repetidos (' + allRepCodes.length + ')</div><div class="match-codes">';
+      for (var i = 0; i < allRepCodes.length; i++) {
+        var rc = allRepCodes[i];
+        var isMatch = myNeed[rc];
+        allRepHtml += '<span class="match-code ' + (isMatch ? 'need' : 'have') + '" title="' + (isMatch ? 'Tu precisas deste!' : 'Ja tens') + '">' + rc + (theirRep[rc] > 1 ? ' x' + theirRep[rc] : '') + '</span>';
+      }
+      allRepHtml += '</div></div>';
+    }
+
+    if (!giveHtml && !getHtml && !allRepHtml) giveHtml = '<div class="no-match">Sem repetidos nem trocas possiveis de momento</div>';
     var card = document.createElement('div'); card.className = 'user-card';
     card.innerHTML = '<div class="user-card-hdr"><span class="user-card-name">&#128100; ' + prof.username + '</span>'
-      + '<div class="user-card-stats"><span class="user-stat"><b>' + Object.keys(theirCol).length + '</b> col.</span><span class="user-stat"><b>' + Object.keys(theirRep).length + '</b> rep.</span></div></div>'
-      + giveHtml + getHtml;
+      + '<div class="user-card-stats"><span class="user-stat"><b>' + Object.keys(theirCol).length + '</b> col.</span><span class="user-stat"><b>' + allRepCodes.length + '</b> rep.</span></div></div>'
+      + giveHtml + getHtml + allRepHtml;
     ct.appendChild(card);
   }
   if (!any) ct.innerHTML = '<div class="empty">Nenhuma correspondencia encontrada</div>';
