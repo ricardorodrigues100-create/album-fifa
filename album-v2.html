@@ -586,7 +586,7 @@ function renderAlbum() {
           + tradersHtml + '</div>'
           + '<div class="cromo-actions">'
           + '<button id="col_' + vc + '" class="cromo-btn col' + (colados[vc] ? ' on' : '') + '" onclick="toggleColado(\'' + vc + '\')">Col</button>'
-          + '<button id="rep_' + vc + '" class="cromo-btn rep' + (rn > 0 ? ' on' : '') + '" onclick="changeRep(\'' + vc + '\',1)">Rep+</button>'
+          + '<button id="rep_' + vc + '" class="cromo-btn rep' + (rn > 0 ? ' on' : '') + '" onclick="' + (colados[vc] ? 'changeRep(\'' + vc + '\',1)' : 'void(0)') + '" style="' + (colados[vc] ? '' : 'opacity:0.3;cursor:not-allowed') + '">Rep+</button>'
           + '</div></div>';
       }
       gHtml += '<div class="team-block"><div class="team-hdr"><span class="team-nome">' + sec.p + '</span>'
