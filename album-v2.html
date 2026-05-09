@@ -809,8 +809,8 @@ function renderPedidos() {
     var btns = '';
     if (isRecebido && p.estado === 'pendente') {
       btns = '<div class="pedido-btns">'
-        + '<button class="pbtn pbtn-green" onclick="responderPedido(' + p.id + ','aceite')">Aceitar</button>'
-        + '<button class="pbtn pbtn-red" onclick="responderPedido(' + p.id + ','recusado')">Recusar</button>'
+        + '<button class="pbtn pbtn-green" onclick="responderPedido(' + p.id + ',\"aceite\")">Aceitar</button>'
+        + '<button class="pbtn pbtn-red" onclick="responderPedido(' + p.id + ',\"recusado\")">Recusar</button>'
         + '</div>';
     } else if (!isRecebido && p.estado === 'pendente') {
       btns = '<div class="pedido-btns"><button class="pbtn pbtn-grey" onclick="cancelarPedido(' + p.id + ')">Cancelar</button></div>';
