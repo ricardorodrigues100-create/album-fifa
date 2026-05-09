@@ -101,17 +101,7 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 .gc0{background:#1a3a6b}.gc1{background:#6b1a1a}.gc2{background:#1a5c2a}.gc3{background:#6b4a1a}.gc4{background:#4a1a6b}.gc5{background:#1a5c5c}.gc6{background:#6b1a4a}.gc7{background:#1a4a6b}.gc8{background:#4a4a1a}.gc9{background:#6b3a1a}.gc10{background:#1a6b4a}.gc11{background:#5c1a6b}.gc12{background:#2a5c3a}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid #1e2d5a;border-top-color:#f5c842;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.splash{position:fixed;inset:0;background:#080d24;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s}
-.splash.hide{opacity:0;pointer-events:none}
-.splash-trophy{font-size:64px;animation:pulse 1.2s ease-in-out infinite}
-.splash-title{font-size:22px;font-weight:800;color:#f5c842;text-transform:uppercase;letter-spacing:2px;margin-top:16px}
-.splash-sub{font-size:11px;color:#6b7db3;margin-top:6px;letter-spacing:0.5px}
-.splash-dots{display:flex;gap:6px;margin-top:24px}
-.splash-dot{width:8px;height:8px;border-radius:50%;background:#1e2d5a;animation:dotpulse 1.2s ease-in-out infinite}
-.splash-dot:nth-child(2){animation-delay:0.2s}
-.splash-dot:nth-child(3){animation-delay:0.4s}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
-@keyframes dotpulse{0%,100%{background:#1e2d5a}50%{background:#f5c842}}
+
 .chat-wrap{background:#0f1635;border:1px solid #1e2d5a;border-radius:10px;margin-bottom:12px;overflow:hidden}
 .chat-title{padding:10px 14px;border-bottom:1px solid #1e2d5a;font-size:12px;font-weight:700;color:#f5c842;display:flex;align-items:center;gap:6px}
 .chat-msgs{height:220px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
@@ -149,17 +139,6 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 </style>
 </head>
 <body>
-
-<div class="splash" id="splash">
-  <div class="splash-trophy">&#127942;</div>
-  <div class="splash-title">FIFA World Cup</div>
-  <div class="splash-sub">Album de Cromos Interativo</div>
-  <div class="splash-dots">
-    <div class="splash-dot"></div>
-    <div class="splash-dot"></div>
-    <div class="splash-dot"></div>
-  </div>
-</div>
 
 <div class="auth-wrap" id="auth-wrap">
   <div class="auth-box">
@@ -290,28 +269,19 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 
 <script>
 
-// Hide splash and check session
-function hideSplash() {
-  var splash = document.getElementById('splash');
-  if (splash) { splash.className = 'splash hide'; setTimeout(function() { splash.style.display = 'none'; }, 500); }
-}
-
+// Check for existing session on load
 window.addEventListener('load', function() {
-  setTimeout(function() {
-    try {
-      sb.auth.getSession().then(function(res) {
-        if (res.data && res.data.session && res.data.session.user) {
-          var user = res.data.session.user;
-          sb.from('profiles').select('username').eq('id', user.id).single().then(function(pp) {
-            var username = pp.data ? pp.data.username : user.email;
-            initApp(user, username).finally(hideSplash);
-          }).catch(hideSplash);
-        } else { hideSplash(); }
-      }).catch(hideSplash);
-    } catch(e) { hideSplash(); }
-  }, 1200);
-  // Failsafe
-  setTimeout(hideSplash, 5000);
+  try {
+    sb.auth.getSession().then(function(res) {
+      if (res.data && res.data.session && res.data.session.user) {
+        var user = res.data.session.user;
+        sb.from('profiles').select('username').eq('id', user.id).single().then(function(pp) {
+          var username = pp.data ? pp.data.username : user.email;
+          initApp(user, username);
+        }).catch(function() {});
+      }
+    }).catch(function() {});
+  } catch(e) {}
 });
 
 // Custom storage that never fails
