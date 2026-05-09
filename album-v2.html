@@ -291,24 +291,32 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 <script>
 
 // Check for existing session on load
+function hideSplash() {
+  var splash = document.getElementById('splash');
+  if (splash) { splash.className = 'splash hide'; setTimeout(function() { splash.style.display = 'none'; }, 500); }
+}
+
+// Safety net - always hide splash after 4 seconds no matter what
+setTimeout(hideSplash, 4000);
+
 setTimeout(function() {
-  sb.auth.getSession().then(function(res) {
-    var splash = document.getElementById('splash');
-    if (res.data && res.data.session && res.data.session.user) {
-      var user = res.data.session.user;
-      sb.from('profiles').select('username').eq('id', user.id).single().then(function(pp) {
-        var username = pp.data ? pp.data.username : user.email;
-        initApp(user, username).then(function() {
-          if (splash) { splash.className = 'splash hide'; setTimeout(function() { splash.style.display = 'none'; }, 500); }
-        });
-      });
-    } else {
-      if (splash) { splash.className = 'splash hide'; setTimeout(function() { splash.style.display = 'none'; }, 500); }
-    }
-  }).catch(function() {
-    var splash = document.getElementById('splash');
-    if (splash) { splash.className = 'splash hide'; setTimeout(function() { splash.style.display = 'none'; }, 500); }
-  });
+  try {
+    sb.auth.getSession().then(function(res) {
+      try {
+        if (res.data && res.data.session && res.data.session.user) {
+          var user = res.data.session.user;
+          sb.from('profiles').select('username').eq('id', user.id).single().then(function(pp) {
+            try {
+              var username = pp.data ? pp.data.username : user.email;
+              initApp(user, username).then(function() { hideSplash(); }).catch(function() { hideSplash(); });
+            } catch(e) { hideSplash(); }
+          }).catch(function() { hideSplash(); });
+        } else {
+          hideSplash();
+        }
+      } catch(e) { hideSplash(); }
+    }).catch(function() { hideSplash(); });
+  } catch(e) { hideSplash(); }
 }, 1500);
 
 // Custom storage that never fails
