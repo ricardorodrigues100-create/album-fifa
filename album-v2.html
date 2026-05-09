@@ -290,34 +290,29 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 
 <script>
 
-// Check for existing session on load
+// Hide splash and check session
 function hideSplash() {
   var splash = document.getElementById('splash');
   if (splash) { splash.className = 'splash hide'; setTimeout(function() { splash.style.display = 'none'; }, 500); }
 }
 
-// Safety net - always hide splash after 4 seconds no matter what
-setTimeout(hideSplash, 4000);
-
-setTimeout(function() {
-  try {
-    sb.auth.getSession().then(function(res) {
-      try {
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    try {
+      sb.auth.getSession().then(function(res) {
         if (res.data && res.data.session && res.data.session.user) {
           var user = res.data.session.user;
           sb.from('profiles').select('username').eq('id', user.id).single().then(function(pp) {
-            try {
-              var username = pp.data ? pp.data.username : user.email;
-              initApp(user, username).then(function() { hideSplash(); }).catch(function() { hideSplash(); });
-            } catch(e) { hideSplash(); }
-          }).catch(function() { hideSplash(); });
-        } else {
-          hideSplash();
-        }
-      } catch(e) { hideSplash(); }
-    }).catch(function() { hideSplash(); });
-  } catch(e) { hideSplash(); }
-}, 1500);
+            var username = pp.data ? pp.data.username : user.email;
+            initApp(user, username).finally(hideSplash);
+          }).catch(hideSplash);
+        } else { hideSplash(); }
+      }).catch(hideSplash);
+    } catch(e) { hideSplash(); }
+  }, 1200);
+  // Failsafe
+  setTimeout(hideSplash, 5000);
+});
 
 // Custom storage that never fails
 var memStorage = {};
