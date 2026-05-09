@@ -800,29 +800,67 @@ function renderPedidos() {
   var list = pedidos.filter(function(p) {
     return pedidosTab === 0 ? p.dono_id === uid : p.solicitante_id === uid;
   });
+  ct.innerHTML = '';
   if (!list.length) { ct.innerHTML = '<div class="empty">Nenhum pedido ' + (pedidosTab === 0 ? 'recebido' : 'enviado') + '.</div>'; return; }
-  var html = '';
+
   for (var i = 0; i < list.length; i++) {
     var p = list[i];
     var isRecebido = p.dono_id === uid;
     var outroUser = isRecebido ? p.solicitante_username : p.dono_username;
-    var btns = '';
+
+    var card = document.createElement('div');
+    card.className = 'pedido-card';
+
+    var hdr = document.createElement('div');
+    hdr.className = 'pedido-hdr';
+    hdr.innerHTML = '<span class="pedido-info">' + (isRecebido ? '<b>' + outroUser + '</b> pediu-te' : 'Pediste a <b>' + outroUser + '</b>') + '</span>'
+      + '<span class="pedido-estado ' + p.estado + '">' + p.estado.charAt(0).toUpperCase() + p.estado.slice(1) + '</span>';
+
+    var codeEl = document.createElement('div');
+    codeEl.className = 'pedido-code';
+    codeEl.textContent = p.codigo;
+
+    card.appendChild(hdr);
+    card.appendChild(codeEl);
+
     if (isRecebido && p.estado === 'pendente') {
-      btns = '<div class="pedido-btns">'
-        + '<button class="pbtn pbtn-green" onclick="responderPedido(' + p.id + ',\"aceite\")">Aceitar</button>'
-        + '<button class="pbtn pbtn-red" onclick="responderPedido(' + p.id + ',\"recusado\")">Recusar</button>'
-        + '</div>';
+      var btnsDiv = document.createElement('div');
+      btnsDiv.className = 'pedido-btns';
+
+      var btnAceitar = document.createElement('button');
+      btnAceitar.className = 'pbtn pbtn-green';
+      btnAceitar.textContent = 'Aceitar';
+      (function(pid) {
+        btnAceitar.onclick = function() { responderPedido(pid, 'aceite'); };
+      })(p.id);
+
+      var btnRecusar = document.createElement('button');
+      btnRecusar.className = 'pbtn pbtn-red';
+      btnRecusar.textContent = 'Recusar';
+      (function(pid) {
+        btnRecusar.onclick = function() { responderPedido(pid, 'recusado'); };
+      })(p.id);
+
+      btnsDiv.appendChild(btnAceitar);
+      btnsDiv.appendChild(btnRecusar);
+      card.appendChild(btnsDiv);
     } else if (!isRecebido && p.estado === 'pendente') {
-      btns = '<div class="pedido-btns"><button class="pbtn pbtn-grey" onclick="cancelarPedido(' + p.id + ')">Cancelar</button></div>';
+      var btnsDiv = document.createElement('div');
+      btnsDiv.className = 'pedido-btns';
+      var btnCanc = document.createElement('button');
+      btnCanc.className = 'pbtn pbtn-grey';
+      btnCanc.textContent = 'Cancelar';
+      (function(pid) {
+        btnCanc.onclick = function() { cancelarPedido(pid); };
+      })(p.id);
+      btnsDiv.appendChild(btnCanc);
+      card.appendChild(btnsDiv);
     }
-    html += '<div class="pedido-card">'
-      + '<div class="pedido-hdr"><span class="pedido-info">' + (isRecebido ? '<b>' + outroUser + '</b> pediu-te' : 'Pediste a <b>' + outroUser + '</b>') + '</span>'
-      + '<span class="pedido-estado ' + p.estado + '">' + p.estado.charAt(0).toUpperCase() + p.estado.slice(1) + '</span></div>'
-      + '<div class="pedido-code">' + p.codigo + '</div>'
-      + btns + '</div>';
+
+    ct.appendChild(card);
   }
-  ct.innerHTML = html;
 }
+
 
 async function pedirCromo(donoId, donoUsername, codigo) {
   var uid = currentUser.id;
