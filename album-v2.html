@@ -130,6 +130,22 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 .chat-input{flex:1;background:#080d24;border:1px solid #1e2d5a;border-radius:8px;color:#e8eaf6;font-size:13px;padding:8px 10px;outline:none;-webkit-appearance:none}
 .chat-send{background:#f5c842;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#0a0f2e;cursor:pointer;flex-shrink:0}
 .chat-empty{text-align:center;color:#3a4a6b;font-size:12px;padding:20px}
+.badge{display:inline-block;background:#f5c842;color:#0a0f2e;font-size:9px;font-weight:800;border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle}
+.pedido-card{background:#0f1635;border:1px solid #1e2d5a;border-radius:10px;padding:12px;margin-bottom:8px}
+.pedido-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.pedido-info{font-size:12px;color:#e8eaf6}
+.pedido-info b{color:#f5c842}
+.pedido-code{display:inline-block;background:#162040;border:1px solid #1e2d5a;border-radius:6px;padding:3px 10px;font-size:13px;font-weight:700;color:#f5c842;margin:6px 0}
+.pedido-estado{font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px}
+.pedido-estado.pendente{background:#2d2a0a;color:#f5c842;border:1px solid #a37f00}
+.pedido-estado.aceite{background:#0a2d0a;color:#22c55e;border:1px solid #15803d}
+.pedido-estado.recusado{background:#2d0a0a;color:#f87171;border:1px solid #7f1d1d}
+.pedido-btns{display:flex;gap:6px;margin-top:8px}
+.pbtn{flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none}
+.pbtn-green{background:#15803d;color:#fff}
+.pbtn-red{background:#7f1d1d;color:#fff}
+.pbtn-grey{background:#1e2d5a;color:#6b7db3}
+.pedir-btn{background:#1d4ed8;border:none;border-radius:6px;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;cursor:pointer;margin-left:4px}
 </style>
 </head>
 <body>
@@ -219,6 +235,7 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
     <button class="nav-btn on" id="nav-album" onclick="showTab('album',this)">&#127968; Album</button>
     <button class="nav-btn" id="nav-repetidos" onclick="showTab('repetidos',this)">&#128257; Repetidos</button>
     <button class="nav-btn" id="nav-comunidade" onclick="showTab('comunidade',this)">&#128101; Comunidade</button>
+    <button class="nav-btn" id="nav-pedidos" onclick="showTab('pedidos',this)">&#128257; Pedidos<span class="badge" id="badge-pedidos" style="display:none">0</span></button>
   </div>
 
   <div class="tab-content on" id="tab-album">
@@ -243,6 +260,14 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
     </div>
     <input class="search-box" id="sq-rep" type="search" placeholder="Pesquisar repetido..." oninput="renderRepetidos()">
     <div id="rep-ct"><div class="empty">Nenhum cromo repetido ainda.<br>No album, clica Rep para adicionar.</div></div>
+  </div>
+
+  <div class="tab-content" id="tab-pedidos">
+    <div class="filters">
+      <button class="fbtn on" id="pfb0" onclick="setPedidosTab(0)">Recebidos</button>
+      <button class="fbtn" id="pfb1" onclick="setPedidosTab(1)">Enviados</button>
+    </div>
+    <div id="pedidos-ct"><div class="empty">Nenhum pedido ainda.</div></div>
   </div>
 
   <div class="tab-content" id="tab-comunidade">
@@ -596,6 +621,7 @@ function showTab(tab, btn) {
   document.getElementById('tab-' + tab).className = 'tab-content on';
   if (btn) btn.className = 'nav-btn on';
   if (tab === 'comunidade') { loadComunidade(); loadChat(); }
+  if (tab === 'pedidos') { loadPedidos(); }
   if (tab === 'repetidos') renderRepetidos();
 }
 
@@ -753,7 +779,8 @@ function renderComunidade() {
       for (var i = 0; i < allRepCodes.length; i++) {
         var rc = allRepCodes[i];
         var isMatch = myNeed[rc];
-        allRepHtml += '<span class="match-code ' + (isMatch ? 'need' : 'have') + '" title="' + (isMatch ? 'Tu precisas deste!' : 'Ja tens') + '">' + rc + (theirRep[rc] > 1 ? ' x' + theirRep[rc] : '') + '</span>';
+        var btnPedir = isMatch ? '<button class="pedir-btn" onclick="pedirCromo(\'' + prof.id + '\',\'' + prof.username + '\',\'' + rc + '\')">Pedir</button>' : '';
+      allRepHtml += '<span class="match-code ' + (isMatch ? 'need' : 'have') + '" title="' + (isMatch ? 'Tu precisas deste!' : 'Ja tens') + '">' + rc + (theirRep[rc] > 1 ? ' x' + theirRep[rc] : '') + btnPedir + '</span>';
       }
       allRepHtml += '</div></div>';
     }
@@ -768,6 +795,92 @@ function renderComunidade() {
   if (!any) ct.innerHTML = '<div class="empty">Nenhuma correspondencia encontrada</div>';
 }
 
+// ── PEDIDOS ──────────────────────────────────────────
+var pedidosTab = 0;
+var pedidos = [];
+
+function setPedidosTab(t) {
+  pedidosTab = t;
+  document.getElementById('pfb0').className = t === 0 ? 'fbtn on' : 'fbtn';
+  document.getElementById('pfb1').className = t === 1 ? 'fbtn on' : 'fbtn';
+  renderPedidos();
+}
+
+async function loadPedidos() {
+  var uid = currentUser.id;
+  var res = await sb.from('pedidos_troca').select('*').or('solicitante_id.eq.' + uid + ',dono_id.eq.' + uid).order('created_at', {ascending: false});
+  pedidos = res.data || [];
+  // Update badge with pending received
+  var pending = pedidos.filter(function(p) { return p.dono_id === uid && p.estado === 'pendente'; });
+  var badge = document.getElementById('badge-pedidos');
+  if (badge) {
+    if (pending.length > 0) { badge.textContent = pending.length; badge.style.display = 'inline-block'; }
+    else { badge.style.display = 'none'; }
+  }
+  renderPedidos();
+}
+
+function renderPedidos() {
+  var ct = document.getElementById('pedidos-ct');
+  if (!ct) return;
+  var uid = currentUser.id;
+  var list = pedidos.filter(function(p) {
+    return pedidosTab === 0 ? p.dono_id === uid : p.solicitante_id === uid;
+  });
+  if (!list.length) { ct.innerHTML = '<div class="empty">Nenhum pedido ' + (pedidosTab === 0 ? 'recebido' : 'enviado') + '.</div>'; return; }
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var isRecebido = p.dono_id === uid;
+    var outroUser = isRecebido ? p.solicitante_username : p.dono_username;
+    var btns = '';
+    if (isRecebido && p.estado === 'pendente') {
+      btns = '<div class="pedido-btns">'
+        + '<button class="pbtn pbtn-green" onclick="responderPedido(' + p.id + ','aceite')">Aceitar</button>'
+        + '<button class="pbtn pbtn-red" onclick="responderPedido(' + p.id + ','recusado')">Recusar</button>'
+        + '</div>';
+    } else if (!isRecebido && p.estado === 'pendente') {
+      btns = '<div class="pedido-btns"><button class="pbtn pbtn-grey" onclick="cancelarPedido(' + p.id + ')">Cancelar</button></div>';
+    }
+    html += '<div class="pedido-card">'
+      + '<div class="pedido-hdr"><span class="pedido-info">' + (isRecebido ? '<b>' + outroUser + '</b> pediu-te' : 'Pediste a <b>' + outroUser + '</b>') + '</span>'
+      + '<span class="pedido-estado ' + p.estado + '">' + p.estado.charAt(0).toUpperCase() + p.estado.slice(1) + '</span></div>'
+      + '<div class="pedido-code">' + p.codigo + '</div>'
+      + btns + '</div>';
+  }
+  ct.innerHTML = html;
+}
+
+async function pedirCromo(donoId, donoUsername, codigo) {
+  var uid = currentUser.id;
+  // Check if already requested
+  var existe = pedidos.find(function(p) { return p.solicitante_id === uid && p.dono_id === donoId && p.codigo === codigo && p.estado === 'pendente'; });
+  if (existe) { showToast('Ja tens um pedido pendente para ' + codigo); return; }
+  var res = await sb.from('pedidos_troca').insert({
+    solicitante_id: uid,
+    solicitante_username: chatUsername || currentUser.email,
+    dono_id: donoId,
+    dono_username: donoUsername,
+    codigo: codigo,
+    estado: 'pendente'
+  });
+  if (res.error) { showToast('Erro ao enviar pedido'); return; }
+  showToast('Pedido enviado a ' + donoUsername + ' para ' + codigo + '!');
+  await loadPedidos();
+}
+
+async function responderPedido(id, estado) {
+  await sb.from('pedidos_troca').update({ estado: estado }).eq('id', id);
+  showToast(estado === 'aceite' ? 'Pedido aceite!' : 'Pedido recusado');
+  await loadPedidos();
+}
+
+async function cancelarPedido(id) {
+  await sb.from('pedidos_troca').delete().eq('id', id);
+  showToast('Pedido cancelado');
+  await loadPedidos();
+}
+
 function showToast(msg) {
   var t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show';
   setTimeout(function() { t.className = 'toast'; }, 2000);
@@ -780,8 +893,9 @@ async function initApp(user, username) {
   document.getElementById('auth-wrap').style.display = 'none';
   document.getElementById('app').className = 'app show';
   await loadUserData();
-  // Pre-load chat so it's ready when user opens Comunidade tab
+  // Pre-load chat and pedidos
   loadChat();
+  loadPedidos();
 }
 
 // No onAuthStateChange - handled directly in doAuth
