@@ -274,8 +274,12 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 <script src="./supabase.js"></script>
 <script>
 
-// Check for existing session on load
-window.addEventListener('load', function() {
+// Check for existing session on load - wait for supabase
+function tryAutoLogin(attempts) {
+  if (typeof supabase === 'undefined' || typeof sb === 'undefined') {
+    if (attempts < 20) setTimeout(function() { tryAutoLogin(attempts + 1); }, 200);
+    return;
+  }
   try {
     sb.auth.getSession().then(function(res) {
       if (res.data && res.data.session && res.data.session.user) {
@@ -287,7 +291,8 @@ window.addEventListener('load', function() {
       }
     }).catch(function() {});
   } catch(e) {}
-});
+}
+setTimeout(function() { tryAutoLogin(0); }, 300);
 
 // Custom storage that never fails
 var memStorage = {};
