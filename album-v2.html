@@ -923,6 +923,7 @@ async function pedirCromo(donoId, donoUsername, codigo) {
   if (res.error) { showToast('Erro ao enviar pedido'); return; }
   showToast('Pedido enviado a ' + donoUsername + ' para ' + codigo + '!');
   await loadPedidos();
+  await loadComunidade();
 }
 
 async function responderPedido(id, estado) {
