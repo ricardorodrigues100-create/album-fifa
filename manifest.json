@@ -1,0 +1,24 @@
+{
+  "name": "Album FIFA World Cup",
+  "short_name": "Album FIFA",
+  "description": "Album de Cromos Interativo FIFA World Cup",
+  "start_url": "/album-fifa/album-v2.html",
+  "display": "standalone",
+  "background_color": "#080d24",
+  "theme_color": "#0a0f2e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
