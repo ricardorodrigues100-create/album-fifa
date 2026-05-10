@@ -322,6 +322,7 @@ var fmode = 0;
 var allProfiles = [];
 var allColados = {};
 var allRepetidos = {};
+var allPedidosAceites = {};
 var authMode = 'login';
 
 function authTab(mode) {
@@ -722,6 +723,16 @@ async function loadComunidade() {
   var pr = await sb.from('cromos_repetidos').select('user_id,codigo,quantidade');
   allRepetidos = {};
   if (pr.data) { for (var i = 0; i < pr.data.length; i++) { var r = pr.data[i]; if (!allRepetidos[r.user_id]) allRepetidos[r.user_id] = {}; allRepetidos[r.user_id][r.codigo] = r.quantidade; } }
+  // Load accepted pedidos to calculate available stock
+  var pa = await sb.from('pedidos_troca').select('dono_id,codigo').eq('estado', 'aceite');
+  allPedidosAceites = {};
+  if (pa.data) {
+    for (var i = 0; i < pa.data.length; i++) {
+      var r = pa.data[i];
+      if (!allPedidosAceites[r.dono_id]) allPedidosAceites[r.dono_id] = {};
+      allPedidosAceites[r.dono_id][r.codigo] = (allPedidosAceites[r.dono_id][r.codigo] || 0) + 1;
+    }
+  }
   renderComunidade();
 }
 
@@ -757,7 +768,22 @@ function renderComunidade() {
       for (var i = 0; i < allRepCodes.length; i++) {
         var rc = allRepCodes[i];
         var isMatch = myNeed[rc];
-        var btnPedir = isMatch ? '<button class="pedir-btn" onclick="pedirCromo(\'' + prof.id + '\',\'' + prof.username + '\',\'' + rc + '\')">Pedir</button>' : '';
+        // Calculate available stock
+      var repQty = theirRep[rc] || 0;
+      var reservados = (allPedidosAceites[prof.id] && allPedidosAceites[prof.id][rc]) || 0;
+      var stockDisp = repQty - reservados;
+      // Check if current user already has a pending/accepted request for this
+      var jaPediu = pedidos.find(function(p) { return p.solicitante_id === currentUser.id && p.dono_id === prof.id && p.codigo === rc && (p.estado === 'pendente' || p.estado === 'aceite'); });
+      var btnPedir = '';
+      if (isMatch) {
+        if (jaPediu) {
+          btnPedir = '<button class="pedir-btn" style="background:#15803d;cursor:default">Pedido</button>';
+        } else if (stockDisp > 0) {
+          btnPedir = '<button class="pedir-btn" onclick="pedirCromo(\'' + prof.id + '\',\'' + prof.username + '\',\'' + rc + '\')">Pedir</button>';
+        } else {
+          btnPedir = '<button class="pedir-btn" style="background:#1e2d5a;color:#6b7db3;cursor:not-allowed">Reservado</button>';
+        }
+      }
       allRepHtml += '<span class="match-code ' + (isMatch ? 'need' : 'have') + '" title="' + (isMatch ? 'Tu precisas deste!' : 'Ja tens') + '">' + rc + (theirRep[rc] > 1 ? ' x' + theirRep[rc] : '') + btnPedir + '</span>';
       }
       allRepHtml += '</div></div>';
@@ -887,14 +913,21 @@ async function pedirCromo(donoId, donoUsername, codigo) {
 
 async function responderPedido(id, estado) {
   await sb.from('pedidos_troca').update({ estado: estado }).eq('id', id);
-  showToast(estado === 'aceite' ? 'Pedido aceite!' : 'Pedido recusado');
+  showToast(estado === 'aceite' ? 'Pedido aceite! Cromo reservado.' : 'Pedido recusado.');
   await loadPedidos();
+  // Reload community to update stock availability
+  if (document.getElementById('tab-comunidade').className.indexOf('on') !== -1) {
+    loadComunidade();
+  }
 }
 
 async function cancelarPedido(id) {
   await sb.from('pedidos_troca').delete().eq('id', id);
-  showToast('Pedido cancelado');
+  showToast('Pedido cancelado. Cromo disponivel novamente.');
   await loadPedidos();
+  if (document.getElementById('tab-comunidade').className.indexOf('on') !== -1) {
+    loadComunidade();
+  }
 }
 
 function showToast(msg) {
