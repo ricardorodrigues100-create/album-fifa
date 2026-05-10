@@ -880,15 +880,24 @@ function renderPedidos() {
       btnsDiv.appendChild(btnAceitar);
       btnsDiv.appendChild(btnRecusar);
       card.appendChild(btnsDiv);
-    } else if (!isRecebido && p.estado === 'pendente') {
+    } else if (!isRecebido && (p.estado === 'pendente' || p.estado === 'aceite')) {
       var btnsDiv = document.createElement('div');
       btnsDiv.className = 'pedido-btns';
       var btnCanc = document.createElement('button');
-      btnCanc.className = 'pbtn pbtn-grey';
-      btnCanc.textContent = 'Cancelar';
-      (function(pid) {
-        btnCanc.onclick = function() { cancelarPedido(pid); };
-      })(p.id);
+      btnCanc.className = 'pbtn pbtn-red';
+      var msg = p.estado === 'aceite'
+        ? 'Troca nao realizada - cancelar e libertar cromo'
+        : 'Cancelar pedido';
+      btnCanc.textContent = p.estado === 'aceite' ? 'Nao trocado' : 'Cancelar';
+      btnCanc.title = msg;
+      (function(pid, estado) {
+        btnCanc.onclick = function() {
+          var confirmMsg = estado === 'aceite'
+            ? 'A troca nao foi realizada? O cromo ficara disponivel para outros.'
+            : 'Tens a certeza que queres cancelar o pedido?';
+          if (confirm(confirmMsg)) cancelarPedido(pid);
+        };
+      })(p.id, p.estado);
       btnsDiv.appendChild(btnCanc);
       card.appendChild(btnsDiv);
     }
