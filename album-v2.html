@@ -134,6 +134,8 @@ html,body{min-height:100%;background:#080d24;color:#e8eaf6;font-family:-apple-sy
 .pedido-estado.pendente{background:#2d2a0a;color:#f5c842;border:1px solid #a37f00}
 .pedido-estado.aceite{background:#0a2d0a;color:#22c55e;border:1px solid #15803d}
 .pedido-estado.recusado{background:#2d0a0a;color:#f87171;border:1px solid #7f1d1d}
+.pedido-estado.concluido{background:#0a1a3a;color:#60a5fa;border:1px solid #1d4ed8}
+.pedido-estado.cancelado{background:#1a1a1a;color:#6b7db3;border:1px solid #2a2a2a}
 .pedido-btns{display:flex;gap:6px;margin-top:8px}
 .pbtn{flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none}
 .pbtn-green{background:#15803d;color:#fff}
@@ -880,6 +882,33 @@ function renderPedidos() {
       btnsDiv.appendChild(btnAceitar);
       btnsDiv.appendChild(btnRecusar);
       card.appendChild(btnsDiv);
+    } else if (isRecebido && p.estado === 'aceite') {
+      var btnsDiv = document.createElement('div');
+      btnsDiv.className = 'pedido-btns';
+
+      var btnConcluir = document.createElement('button');
+      btnConcluir.className = 'pbtn pbtn-green';
+      btnConcluir.textContent = 'Troca Concluida';
+      (function(pid, pobj) {
+        btnConcluir.onclick = function() {
+          if (confirm('Confirmas que a troca do cromo ' + pobj.codigo + ' com ' + pobj.solicitante_username + ' foi realizada?')) {
+            concluirTroca(pid, pobj);
+          }
+        };
+      })(p.id, p);
+
+      var btnRecusar = document.createElement('button');
+      btnRecusar.className = 'pbtn pbtn-grey';
+      btnRecusar.textContent = 'Cancelar';
+      (function(pid) {
+        btnRecusar.onclick = function() {
+          if (confirm('Cancelar a troca? O cromo ficara disponivel para outros.')) cancelarPedidoDono(pid);
+        };
+      })(p.id);
+
+      btnsDiv.appendChild(btnConcluir);
+      btnsDiv.appendChild(btnRecusar);
+      card.appendChild(btnsDiv);
     } else if (!isRecebido && (p.estado === 'pendente' || p.estado === 'aceite')) {
       var btnsDiv = document.createElement('div');
       btnsDiv.className = 'pedido-btns';
@@ -926,14 +955,46 @@ async function pedirCromo(donoId, donoUsername, codigo) {
   await loadComunidade();
 }
 
+async function concluirTroca(id, p) {
+  var uid = currentUser.id;
+  // 1. Mark pedido as concluido
+  await sb.from('pedidos_troca').update({ estado: 'concluido' }).eq('id', id);
+
+  // 2. Remove 1 repetido do dono (eu)
+  var curRep = repetidos[p.codigo] || 0;
+  var newRep = curRep - 1;
+  if (newRep <= 0) {
+    await sb.from('cromos_repetidos').delete().eq('user_id', uid).eq('codigo', p.codigo);
+    repetidos[p.codigo] = 0;
+  } else {
+    await sb.from('cromos_repetidos').update({ quantidade: newRep }).eq('user_id', uid).eq('codigo', p.codigo);
+    repetidos[p.codigo] = newRep;
+  }
+
+  // 3. Adicionar cromo como colado ao solicitante
+  await sb.from('cromos_colados').insert({ user_id: p.solicitante_id, codigo: p.codigo }).select();
+
+  showToast('Troca concluida! Repetido atualizado.');
+  updateRepStats();
+  renderRepetidos();
+  renderAlbum();
+  await loadPedidos();
+  await loadComunidade();
+}
+
+async function cancelarPedidoDono(id) {
+  await sb.from('pedidos_troca').update({ estado: 'cancelado' }).eq('id', id);
+  showToast('Troca cancelada. Cromo disponivel novamente.');
+  await loadPedidos();
+  await loadComunidade();
+  renderPedidos();
+}
+
 async function responderPedido(id, estado) {
   await sb.from('pedidos_troca').update({ estado: estado }).eq('id', id);
   showToast(estado === 'aceite' ? 'Pedido aceite! Cromo reservado.' : 'Pedido recusado.');
   await loadPedidos();
-  // Reload community to update stock availability
-  if (document.getElementById('tab-comunidade').className.indexOf('on') !== -1) {
-    loadComunidade();
-  }
+  await loadComunidade();
 }
 
 async function cancelarPedido(id) {
